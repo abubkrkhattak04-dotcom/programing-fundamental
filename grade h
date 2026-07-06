@@ -1,0 +1,16 @@
+// grades.h
+#ifndef GRADES_H
+#define GRADES_H
+#include <string>
+using namespace std;
+
+void enterMarks();
+double bestThree(double q[], int n);
+double weightedTotal(double quiz, double asgn, double mid, double final_);
+string letterGrade(double total);
+double gradePoints(string letter);
+double semesterGPA(string roll, string sem);
+void classStats(string code);
+void attendancePenalty(string roll, string code);
+
+#endif
