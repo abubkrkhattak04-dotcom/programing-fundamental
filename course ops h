@@ -1,0 +1,13 @@
+// course_ops.h
+#ifndef COURSE_OPS_H
+#define COURSE_OPS_H
+#include <string>
+using namespace std;
+
+void enrollStudent(string roll, string code, string sem);
+void dropCourse(string roll, string code, string sem);
+int getCreditLoad(string roll, string sem);
+bool checkPrereq(string roll, string prereqCode);
+void listEnrolled(string code, string sem);
+
+#endif
