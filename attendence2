@@ -1,0 +1,13 @@
+// attendance.h
+#ifndef ATTENDANCE_H
+#define ATTENDANCE_H
+#include <string>
+using namespace std;
+
+void markAttendance(string code, string sem, string date);
+double getAttendancePct(string roll, string code);
+void shortageList(string code);
+void printSheet(string code, string date);
+bool undoAttendance();
+
+#endif
