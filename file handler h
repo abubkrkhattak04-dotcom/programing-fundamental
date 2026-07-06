@@ -1,0 +1,17 @@
+// filehandler.h
+#ifndef FILEHANDLER_H
+#define FILEHANDLER_H
+
+#include <string>
+using namespace std;
+
+// 2D array stores file data like a table
+extern string fileData[300][8];
+extern int rowCount;
+
+int readFile(string filename);
+void writeFile(string filename, string header);
+void appendFile(string filename, string line);
+int searchInColumn(int column, string value);
+
+#endif
