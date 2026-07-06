@@ -1,0 +1,13 @@
+// fee_tracker.h
+#ifndef FEE_TRACKER_H
+#define FEE_TRACKER_H
+#include <string>
+using namespace std;
+
+void recordPayment();
+int daysBetween(string d1, string d2);
+double lateFine(string dueDate, string paidDate);
+void genReceipt(string roll, string sem);
+void showDefaulters();
+
+#endif
