@@ -1,0 +1,129 @@
+// course_ops.cpp
+#include "course_ops.h"
+#include "filehandler.h"
+#include <iostream>
+#include <sstream>
+#include <fstream>
+using namespace std;
+
+bool checkPrereq(string roll, string prereqCode) {
+    if (prereqCode == "NONE") return true;
+    readFile("grades.txt");
+    for (int i = 0; i < rowCount; i++) {
+        if (fileData[i][0] == roll && fileData[i][1] == prereqCode) {
+            if (fileData[i][7] != "F") return true;
+        }
+    }
+    cout << "Prerequisite not met!" << endl;
+    return false;
+}
+
+// Get total credits for student in semester
+int getCreditLoad(string roll, string sem) {
+    int total = 0;
+    ifstream ef("enrollments.txt");
+    string line;
+    bool skip = true;
+
+    while (getline(ef, line)) {
+        if (skip) { skip = false; continue; }
+        if (line == "") continue;
+
+        string eRoll = "", eCode = "", eSem = "", eStatus = "";
+        string cell = "";
+        int col = 0;
+        for (int i = 0; i < (int)line.length(); i++) {
+            if (line[i] == ',') {
+                if (col == 0) eRoll = cell;
+                else if (col == 1) eCode = cell;
+                else if (col == 2) eSem = cell;
+                col++;
+                cell = "";
+            } else {
+                cell += line[i];
+            }
+        }
+        eStatus = cell;
+
+        if (eRoll == roll && eSem == sem && eStatus == "enrolled") {
+            readFile("courses.txt");
+            for (int c = 0; c < rowCount; c++) {
+                if (fileData[c][0] == eCode) {
+                    int credits = 0;
+                    stringstream(fileData[c][2]) >> credits;
+                    total += credits;
+                    break;
+                }
+            }
+        }
+    }
+    ef.close();
+    return total;
+}
+
+void enrollStudent(string roll, string code, string sem) {
+    readFile("students.txt");
+    int si = searchInColumn(0, roll);
+    if (si == -1 || fileData[si][4] != "active") { cout << "Student not active!" << endl; return; }
+
+    readFile("courses.txt");
+    int ci = searchInColumn(0, code);
+    if (ci == -1) { cout << "Course not found!" << endl; return; }
+
+    int seats = 0;
+    stringstream(fileData[ci][3]) >> seats;
+    int credits = 0;
+    stringstream(fileData[ci][2]) >> credits;
+    string prereq = fileData[ci][4];
+
+    readFile("enrollments.txt");
+    int enrolled = 0;
+    for (int i = 0; i < rowCount; i++)
+        if (fileData[i][1] == code && fileData[i][3] == "enrolled") enrolled++;
+
+    if (enrolled >= seats) { cout << "No seats!" << endl; return; }
+
+    for (int i = 0; i < rowCount; i++)
+        if (fileData[i][0] == roll && fileData[i][1] == code && fileData[i][2] == sem && fileData[i][3] == "enrolled") {
+            cout << "Already enrolled!" << endl; return;
+        }
+
+    int load = getCreditLoad(roll, sem);
+    if (load + credits > 21) { cout << "Exceeds 21 credits!" << endl; return; }
+
+    if (!checkPrereq(roll, prereq)) return;
+
+    string line = roll + "," + code + "," + sem + ",enrolled";
+    appendFile("enrollments.txt", line);
+    cout << "Enrolled!" << endl;
+}
+
+void dropCourse(string roll, string code, string sem) {
+    readFile("attendance_log.txt");
+    for (int i = 0; i < rowCount; i++)
+        if (fileData[i][0] == roll && fileData[i][1] == code) {
+            cout << "Cannot drop - attendance exists!" << endl; return;
+        }
+
+    readFile("enrollments.txt");
+    for (int i = 0; i < rowCount; i++) {
+        if (fileData[i][0] == roll && fileData[i][1] == code && fileData[i][2] == sem && fileData[i][3] == "enrolled") {
+            fileData[i][3] = "dropped";
+            writeFile("enrollments.txt", "roll,course_code,semester,status");
+            cout << "Dropped!" << endl; return;
+        }
+    }
+    cout << "Not found!" << endl;
+}
+
+void listEnrolled(string code, string sem) {
+    readFile("enrollments.txt");
+    bool found = false;
+    for (int i = 0; i < rowCount; i++) {
+        if (fileData[i][1] == code && fileData[i][2] == sem && fileData[i][3] == "enrolled") {
+            cout << fileData[i][0] << endl;
+            found = true;
+        }
+    }
+    if (!found) cout << "No students." << endl;
+}
