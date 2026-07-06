@@ -1,0 +1,209 @@
+// fee_tracker.cpp
+// Fee management functions
+
+#include "fee_tracker.h"
+#include "filehandler.h"
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+using namespace std;
+
+// Convert date (DD-MM-YYYY) to total day count
+int toDays(string date)
+{
+    int d = 0, m = 0, y = 0;
+    string tmp = "";
+    int state = 0; // 0=day, 1=month, 2=year
+
+    for (int i = 0; i < (int)date.length(); i++)
+    {
+        if (date[i] == '-')
+        {
+            if (state == 0)
+            {
+                stringstream s(tmp);
+                s >> d;
+            }
+            else if (state == 1)
+            {
+                stringstream s(tmp);
+                s >> m;
+            }
+            state++;
+            tmp = "";
+        }
+        else
+        {
+            tmp += date[i];
+        }
+    }
+    stringstream s(tmp);
+    s >> y;
+
+    // Simple formula: year*365 + month*30 + day
+    int daysInMonth[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int total = y * 365 + y / 4 - y / 100 + y / 400;
+    for (int i = 1; i < m; i++)
+        total += daysInMonth[i];
+    total += d;
+    return total;
+}
+
+// Calculate days between two dates
+int daysBetween(string d1, string d2)
+{
+    int diff = toDays(d2) - toDays(d1);
+    return (diff < 0) ? -diff : diff;
+}
+
+// Calculate late fine (2% per complete week)
+double lateFine(string dueDate, string paidDate)
+{
+    int diff = toDays(paidDate) - toDays(dueDate);
+    if (diff <= 0)
+        return 0;
+    int weeks = diff / 7; // complete weeks
+    return weeks * 2.0;   // 2% per week
+}
+
+// Record a payment
+void recordPayment(){
+    string roll, sem;
+    cout << "\n--- Record Payment ---" << endl;
+    cout << "Roll: ";
+    cin >> roll;
+    cout << "Semester: ";
+    cin >> sem;
+
+    readFile("fees.txt");
+    int idx = -1;
+    for (int i = 0; i < rowCount; i++){
+        if (fileData[i][0] == roll && fileData[i][1] == sem)
+        {
+            idx = i;
+            break;
+        }
+    }
+
+    if (idx == -1)
+    {
+        cout << "Record not found!" << endl;
+        return;
+    }
+
+    double due = 0, paid = 0;
+    stringstream(fileData[idx][2]) >> due;
+    stringstream(fileData[idx][3]) >> paid;
+    double balance = due - paid;
+
+    cout << "Due: " << due << " | Paid: " << paid << " | Balance: " << balance << endl;
+
+    if (balance <= 0)
+    {
+        cout << "Fully paid!" << endl;
+        return;
+    }
+
+    double amount;
+    cout << "Payment amount: ";
+    cin >> amount;
+    if (amount <= 0 || amount > balance)
+    {
+        cout << "Invalid amount!" << endl;
+        return;
+    }
+
+    string paidDate;
+    cout << "Date (DD-MM-YYYY): ";
+    cin >> paidDate;
+
+    // Update
+    double newPaid = paid + amount;
+    stringstream ss;
+    ss << fixed << setprecision(0) << newPaid;
+    fileData[idx][3] = ss.str();
+    fileData[idx][5] = paidDate;
+
+    writeFile("fees.txt", "roll,semester,amount_due,amount_paid,due_date,paid_date");
+    cout << "Payment recorded! New balance: " << (due - newPaid) << endl;
+}
+
+// Generate receipt
+void genReceipt(string roll, string sem)
+{
+    readFile("fees.txt");
+    int idx = -1;
+    for (int i = 0; i < rowCount; i++)
+    {
+        if (fileData[i][0] == roll && fileData[i][1] == sem)
+        {
+            idx = i;
+            break;
+        }
+    }
+
+    if (idx == -1)
+    {
+        cout << "Not found!" << endl;
+        return;
+    }
+
+    double due = 0, paid = 0;
+    stringstream(fileData[idx][2]) >> due;
+    stringstream(fileData[idx][3]) >> paid;
+    double fine = lateFine(fileData[idx][4], fileData[idx][5]);
+    double fineAmt = due * fine / 100.0;
+    double balance = due + fineAmt - paid;
+
+    cout << "\n================================" << endl;
+    cout << "        FEE RECEIPT             " << endl;
+    cout << "================================" << endl;
+    cout << " Roll:       " << roll << endl;
+    cout << " Semester:   " << sem << endl;
+    cout << "--------------------------------" << endl;
+    cout << " Tuition:    " << due << endl;
+    cout << " Late Fine:  " << fineAmt;
+    if (fine > 0)
+        cout << " (" << fine << "%)";
+    cout << endl;
+    cout << "--------------------------------" << endl;
+    cout << " Total Due:  " << (due + fineAmt) << endl;
+    cout << " Paid:       " << paid << endl;
+    cout << " Balance:    " << balance << endl;
+    cout << "================================" << endl;
+    cout << " Status:     " << (balance > 0 ? "OUTSTANDING" : "PAID") << endl;
+    cout << "================================" << endl;
+}
+
+// Show defaulters (balance > 0)
+void showDefaulters()
+{
+    readFile("fees.txt");
+
+    // Collect defaulters
+    int defIdx[300];
+    double defBal[300];
+    int count = 0;
+
+    for (int i = 0; i < rowCount; i++)
+    {
+        double due = 0, paid = 0;
+        stringstream(fileData[i][2]) >> due;
+        stringstream(fileData[i][3]) >> paid;
+        double bal = due - paid;
+        if (bal > 0)
+        {
+            defIdx[count] = i;
+            defBal[count] = bal;
+            count++;
+        }
+    }
+
+    cout << "\n--- Fee Defaulters ---" << endl;
+    cout << "Roll         | Balance" << endl;
+    for (int i = 0; i < count; i++)
+    {
+        cout << fileData[defIdx[i]][0] << " | " << fixed << setprecision(0) << defBal[i] << endl;
+    }
+    cout << "Total: " << count << endl;
+}
