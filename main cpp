@@ -1,0 +1,284 @@
+// main.cpp - Campus Analytics Engine
+#include "attendance.h"
+#include "course_ops.h"
+#include "fee_tracker.h"
+#include "filehandler.h"
+#include "grades.h"
+#include "reports.h"
+#include "student_ops.h"
+#include <iomanip>
+#include <iostream>
+#include <string>
+using namespace std;
+
+void studentMenu(){
+  int ch;
+  do{
+    cout << "\n--- Student Operations ---" << endl;
+    cout << "1. Add Student" << endl;
+    cout << "2. Search by Roll" << endl;
+    cout << "3. Search by Name" << endl;
+    cout << "4. Update Student" << endl;
+    cout << "5. Delete Student" << endl;
+    cout << "6. List All" << endl;
+    cout << "0. Back" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1)
+      addStudent();
+    else if (ch == 2) {
+      string r;
+      cout << "Roll: ";
+      cin >> r;
+      searchStudent(r);
+
+    } else if (ch == 3) {
+      string n;
+      cout << "Name: ";
+      cin.ignore();
+      getline(cin, n);
+      searchByName(n);
+    } 
+    else if (ch == 4) {
+      string r;
+      cout << "Roll: ";
+      cin >> r;
+      updateStudent(r);
+    } 
+    else if (ch == 5) {
+      string r;
+      cout << "Roll: ";
+      cin >> r;
+      deleteStudent(r);
+    } 
+    else if (ch == 6)
+      listStudents();
+  } while (ch != 0);
+}
+
+void courseMenu() {
+  int ch;
+  do {
+    cout << "\n--- Course Operations ---" << endl;
+    cout << "1. Enroll Student" << endl;
+    cout << "2. Drop Course" << endl;
+    cout << "3. List Enrolled" << endl;
+    cout << "4. Credit Load" << endl;
+    cout << "0. Back" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1) {
+      string r, c, s;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Course: ";
+      cin >> c;
+      cout << "Semester: ";
+      cin >> s;
+      enrollStudent(r, c, s);
+    }
+    
+    else if (ch == 2) {
+      string r, c, s;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Course: ";
+      cin >> c;
+      cout << "Semester: ";
+      cin >> s;
+      dropCourse(r, c, s);
+    } 
+    else if (ch == 3) {
+      string c, s;
+      cout << "Course: ";
+      cin >> c;
+      cout << "Semester: ";
+      cin >> s;
+      listEnrolled(c, s);
+    } else if (ch == 4) {
+      string r, s;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Semester: ";
+      cin >> s;
+      cout << "Credits: " << getCreditLoad(r, s) << endl;
+    }
+  } while (ch != 0);
+}
+
+void attendanceMenu() {
+  int ch;
+  do {
+    cout << "\n--- Attendance ---" << endl;
+    cout << "1. Mark Attendance" << endl;
+    cout << "2. Check %" << endl;
+    cout << "3. Shortage List" << endl;
+    cout << "4. Daily Sheet" << endl;
+    cout << "5. Undo" << endl;
+    cout << "0. Back" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1) {
+      string c, s, d;
+      cout << "Course: ";
+      cin >> c;
+      cout << "Semester: ";
+      cin >> s;
+      cout << "Date: ";
+      cin >> d;
+      markAttendance(c, s, d);
+    } else if (ch == 2) {
+      string r, c;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Course: ";
+      cin >> c;
+      cout << getAttendancePct(r, c) << "%" << endl;
+    } else if (ch == 3) {
+      string c;
+      cout << "Course: ";
+      cin >> c;
+      shortageList(c);
+    } else if (ch == 4) {
+      string c, d;
+      cout << "Course: ";
+      cin >> c;
+      cout << "Date: ";
+      cin >> d;
+      printSheet(c, d);
+    } else if (ch == 5)
+      undoAttendance();
+  } while (ch != 0);
+}
+
+void gradesMenu() {
+  int ch;
+  do {
+    cout << "\n--- Grades ---" << endl;
+    cout << "1. Enter Marks" << endl;
+    cout << "2. Semester GPA" << endl;
+    cout << "3. Class Stats" << endl;
+    cout << "4. Attendance Penalty" << endl;
+    cout << "0. Back" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1)
+      enterMarks();
+    else if (ch == 2) {
+      string r, s;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Semester: ";
+      cin >> s;
+      cout << "GPA: " << fixed << setprecision(2) << semesterGPA(r, s) << endl;
+    } 
+    else if (ch == 3) {
+      string c;
+      cout << "Course: ";
+      cin >> c;
+      classStats(c);
+    } 
+    else if (ch == 4) {
+      string r, c;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Course: ";
+      cin >> c;
+      attendancePenalty(r, c);
+    }
+  } while (ch != 0);
+}
+
+void feeMenu() {
+  int ch;
+  do {
+    cout << "\n--- Fee Tracker ---" << endl;
+    cout << "1. Record Payment" << endl;
+    cout << "2. Receipt" << endl;
+    cout << "3. Defaulters" << endl;
+    cout << "0. Back" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1)
+      recordPayment();
+    else if (ch == 2) {
+      string r, s;
+      cout << "Roll: ";
+      cin >> r;
+      cout << "Semester: ";
+      cin >> s;
+      genReceipt(r, s);
+    } else if (ch == 3)
+      feeDefaulters();
+  } while (ch != 0);
+}
+
+void reportsMenu() {
+  int ch;
+  do {
+    cout << "\n--- Reports ---" << endl;
+    cout << "1. Merit List" << endl;
+    cout << "2. Attendance Defaulters" << endl;
+    cout << "3. Fee Defaulters" << endl;
+    cout << "4. Semester Result" << endl;
+    cout << "5. Department Summary" << endl;
+    cout << "0. Back" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1)
+      meritList();
+    else if (ch == 2)
+      attendDefaulters();
+    else if (ch == 3)
+      feeDefaulters();
+    else if (ch == 4) {
+      string s;
+      cout << "Semester: ";
+      cin >> s;
+      semesterResult(s);
+    } else if (ch == 5)
+      deptSummary();
+  } while (ch != 0);
+}
+
+int main() {
+  int ch;
+  do {
+    cout << "\n========================================" << endl;
+    cout << "     CAMPUS ANALYTICS ENGINE             " << endl;
+    cout << "     BS AI - PF Final Project            " << endl;
+    cout << "========================================" << endl;
+    cout << "1. Student Operations" << endl;
+    cout << "2. Course Operations" << endl;
+    cout << "3. Attendance" << endl;
+    cout << "4. Grades" << endl;
+    cout << "5. Fee Tracker" << endl;
+    cout << "6. Reports" << endl;
+    cout << "0. Exit" << endl;
+    cout << "Choice: ";
+    cin >> ch;
+
+    if (ch == 1)
+      studentMenu();
+    else if (ch == 2)
+      courseMenu();
+    else if (ch == 3)
+      attendanceMenu();
+    else if (ch == 4)
+      gradesMenu();
+    else if (ch == 5)
+      feeMenu();
+    else if (ch == 6)
+      reportsMenu();
+    else if (ch == 0)
+      cout << "\nGoodbye!" << endl;
+  } while (ch != 0);
+
+  return 0;
+}
