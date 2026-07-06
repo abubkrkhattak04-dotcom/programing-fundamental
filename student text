@@ -1,0 +1,6 @@
+roll,name,dept,cgpa,status
+BSAI-23-001,Ahmed Khan,BSAI,3.5,active
+BSAI-23-002,Sara Ali,BSAI,3.8,active
+BSAI-23-003,Usman Malik,BSAI,2.9,active
+BSAI-23-004,Fatima Noor,BSAI,3.2,inactive
+BSAI-23-005,Hassan Raza,BSAI,3.6,active
