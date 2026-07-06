@@ -1,0 +1,6 @@
+code,title,credits,seats,prereq
+AI101,Introduction to AI,3,40,NONE
+CS101,Programming Fundamentals,3,50,NONE
+AI201,Machine Learning,3,35,AI101
+CS201,Data Structures,3,40,CS101
+AI301,Deep Learning,3,30,AI201
